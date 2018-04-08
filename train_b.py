@@ -3,6 +3,8 @@ import torch
 import numpy as np
 import sys
 
+sys.path.append('./src/')
+
 from src.crowd_count import CrowdCounter
 from src import network
 from src.data_loader import ImageDataLoader
@@ -30,13 +32,13 @@ def log_print(text, color=None, on_color=None, attrs=None):
 
 
 method = 'mcnn'
-dataset_name = 'shtechA'
+dataset_name = 'shtechB'
 output_dir = './saved_models/'
 
-train_path = './data/formatted_trainval/shanghaitech_part_A_patches_9/train'
-train_gt_path = './data/formatted_trainval/shanghaitech_part_A_patches_9/train_den'
-val_path = './data/formatted_trainval/shanghaitech_part_A_patches_9/val'
-val_gt_path = './data/formatted_trainval/shanghaitech_part_A_patches_9/val_den'
+train_path = './data/formatted_trainval/shanghaitech_part_B_patches_9/train'
+train_gt_path = './data/formatted_trainval/shanghaitech_part_B_patches_9/train_den'
+val_path = './data/formatted_trainval/shanghaitech_part_B_patches_9/val'
+val_gt_path = './data/formatted_trainval/shanghaitech_part_B_patches_9/val_den'
 
 #training configuration
 start_step = 0
@@ -94,12 +96,12 @@ t.tic()
 
 data_loader = ImageDataLoader(train_path, train_gt_path, shuffle=True, gt_downsample=True, pre_load=True)
 data_loader_val = ImageDataLoader(val_path, val_gt_path, shuffle=False, gt_downsample=True, pre_load=True)
-best_mae = sys.maxint
+best_mae = sys.maxsize
 
 for epoch in range(start_step, end_step+1):    
     step = -1
     train_loss = 0
-    for blob in data_loader:                
+    for blob in list(data_loader):                
         step = step + 1        
         im_data = blob['data']
         gt_data = blob['gt_density']
