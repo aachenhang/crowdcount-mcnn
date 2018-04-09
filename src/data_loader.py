@@ -20,9 +20,9 @@ class ImageDataLoader():
             random.seed(2468)
         self.num_samples = len(self.data_files)
         self.blob_list = {}        
-        self.id_list = range(0,self.num_samples)
+        self.id_list = list(range(0,self.num_samples))
         if self.pre_load:
-            print 'Pre-loading the data. This may take a while...'
+            print('Pre-loading the data. This may take a while...')
             idx = 0
             for fname in self.data_files:
                 
@@ -30,15 +30,15 @@ class ImageDataLoader():
                 img = img.astype(np.float32, copy=False)
                 ht = img.shape[0]
                 wd = img.shape[1]
-                ht_1 = (ht/4)*4
-                wd_1 = (wd/4)*4
+                ht_1 = int((ht/4)*4)
+                wd_1 = int((wd/4)*4)
                 img = cv2.resize(img,(wd_1,ht_1))
                 img = img.reshape((1,1,img.shape[0],img.shape[1]))
                 den = pd.read_csv(os.path.join(self.gt_path,os.path.splitext(fname)[0] + '.csv'), sep=',',header=None).as_matrix()                        
                 den  = den.astype(np.float32, copy=False)
                 if self.gt_downsample:
-                    wd_1 = wd_1/4
-                    ht_1 = ht_1/4
+                    wd_1 = int(wd_1/4)
+                    ht_1 = int(ht_1/4)
                     den = cv2.resize(den,(wd_1,ht_1))                
                     den = den * ((wd*ht)/(wd_1*ht_1))
                 else:
@@ -53,9 +53,9 @@ class ImageDataLoader():
                 self.blob_list[idx] = blob
                 idx = idx+1
                 if idx % 100 == 0:                    
-                    print 'Loaded ', idx, '/', self.num_samples, 'files'
+                    print('Loaded ', idx, '/', self.num_samples, 'files')
                
-            print 'Completed Loading ', idx, 'files'
+            print('Completed Loading ', idx, 'files')
         
         
     def __iter__(self):

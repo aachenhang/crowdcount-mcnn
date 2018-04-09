@@ -1,10 +1,19 @@
 from crowd_count import CrowdCounter
+from AmendNet import MCNNNet, AmendNet
 import network
 import numpy as np
 
 
-def evaluate_model(trained_model, data_loader):
-    net = CrowdCounter()
+def evaluate_model(trained_model, data_loader, netname='CrowdCounter'):
+    if(netname is 'CrowdCounter'):
+        net = CrowdCounter()
+    elif(netname is 'MCNNNet'):
+        net = MCNNNet()
+    elif(netname is 'AmendNet'):
+        net = AmendNet()
+    else:
+        raise('netname should be one of ["CrowdCounter", "MCNNNet", "AmendNet"],\
+        but we got ', netname)
     network.load_net(trained_model, net)
     net.cuda()
     net.eval()
@@ -22,3 +31,5 @@ def evaluate_model(trained_model, data_loader):
     mae = mae/data_loader.get_num_samples()
     mse = np.sqrt(mse/data_loader.get_num_samples())
     return mae,mse
+
+    

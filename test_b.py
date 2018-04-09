@@ -19,7 +19,7 @@ save_output = True
 
 data_path =  './data/original/shanghaitech/part_B_final/test_data/images/'
 gt_path = './data/original/shanghaitech/part_B_final/test_data/ground_truth_csv/'
-model_path = './final_models/mcnn_shtechB_490.h5'
+model_path = './final_models/mcnn_shtechB_174.h5'
 
 output_dir = './output/'
 model_name = os.path.basename(model_path).split('.')[0]

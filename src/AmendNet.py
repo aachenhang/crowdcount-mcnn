@@ -46,12 +46,12 @@ class MCNN_BackBone(nn.Module):
 
 
 class MCNNNet(nn.Module):
-    def __init__(self, mcnn_head=None, bn=False):
+    def __init__(self, mcnn_backbone=None, bn=False):
         super(MCNNNet, self).__init__()
-        if(mcnn_head is not None):
-            self.MH = mcnn_head
+        if(mcnn_backbone is not None):
+            self.mcnn_backbone = mcnn_backbone
         else:
-            self.MH = MCNN_BackBone()      
+            self.mcnn_backbone = MCNN_BackBone()      
         self.fuse = nn.Sequential(Conv2d( 30, 1, 1, same_padding=True, bn=bn))
 
         
@@ -61,12 +61,12 @@ class MCNNNet(nn.Module):
     
     def forward(self, im_data, gt_data=None):        
         im_data = network.np_to_variable(im_data, is_cuda=True, is_training=self.training)                
-        feature_map = self.MH(im_data)
+        feature_map = self.mcnn_backbone(im_data)
         density_map = self.fuse(feature_map)
         
         if self.training:                        
             gt_data = network.np_to_variable(gt_data, is_cuda=True, is_training=self.training)            
-            self.loss_mse = nn.MSELoss(density_map, gt_data)
+            self.loss_mse = nn.MSELoss()(density_map, gt_data)
             
         return density_map
 
@@ -76,18 +76,18 @@ class AmendNet(nn.Module):
     AmendNet
         -Based on MCNN and amend the density map
     '''
-    def __init__(self, mcnn_head=None, bn=False):
+    def __init__(self, mcnn_backbone=None, bn=False):
         super(AmendNet, self).__init__()
         
-        if(mcnn_head is not None):
-            self.MH = mcnn_head
+        if(mcnn_backbone is not None):
+            self.mcnn_backbone = mcnn_backbone
         else:
-            self.MH = MCNN_BackBone()
+            self.mcnn_backbone = MCNN_BackBone()
         self.conv3x3 = Conv2d( 1, 30, 3, same_padding=True, bn=bn)
         self.downsample = nn.AvgPool2d(4)
-        self.amend = nn.Sequential(Conv2d( 30, 30, 11, same_padding=True, bn=bn),
-                                   Conv2d( 30, 30, 9, same_padding=True, bn=bn),
-                                   Conv2d( 30, 30, 7, same_padding=True, bn=bn),
+        self.amend = nn.Sequential(Conv2d( 60, 50, 11, same_padding=True, bn=bn),
+                                   Conv2d( 50, 40, 9, same_padding=True, bn=bn),
+                                   Conv2d( 40, 30, 7, same_padding=True, bn=bn),
                                    Conv2d( 30, 30, 5, same_padding=True, bn=bn))
         self.fuse = nn.Sequential(Conv2d( 30, 1, 1, same_padding=True, bn=bn))
             
@@ -97,7 +97,7 @@ class AmendNet(nn.Module):
     
     def forward(self, im_data, gt_data=None):
         im_data = network.np_to_variable(im_data, is_cuda=True, is_training=self.training) 
-        feature_map = self.MH(im_data)
+        feature_map = self.mcnn_backbone(im_data)
         x = self.conv3x3(im_data)
         x = self.downsample(x)
         x = torch.cat((feature_map, x), 1)
@@ -106,7 +106,7 @@ class AmendNet(nn.Module):
         
         if self.training:
             gt_data = network.np_to_variable(gt_data, is_cuda=True, is_training=self.training)            
-            self.loss_mse = nn.MSELoss(density_map, gt_data)
+            self.loss_mse = nn.MSELoss()(density_map, gt_data)
     
         return density_map
     

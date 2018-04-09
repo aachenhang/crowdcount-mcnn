@@ -9,16 +9,19 @@ from src.crowd_count import CrowdCounter
 from src import network
 from src.data_loader import ImageDataLoader
 from src import utils
+import re
+import scipy.io
 
 
 
 torch.backends.cudnn.enabled = True
 torch.backends.cudnn.benchmark = False
-vis = False
+vis = True
 save_output = True
 
 data_path =  './data/original/shanghaitech/part_A_final/test_data/images/'
-gt_path = './data/original/shanghaitech/part_A_final/test_data/ground_truth_csv/'
+gt_csv_path = './data/original/shanghaitech/part_A_final/test_data/ground_truth_csv/'
+gt_path = './data/original/shanghaitech/part_A_final/test_data/ground_truth/'
 model_path = './final_models/mcnn_shtechA_490.h5'
 
 output_dir = './output/'
@@ -41,21 +44,29 @@ mae = 0.0
 mse = 0.0
 
 #load test data
-data_loader = ImageDataLoader(data_path, gt_path, shuffle=False, gt_downsample=True, pre_load=True)
+data_loader = ImageDataLoader(data_path, gt_csv_path, shuffle=False, gt_downsample=True, pre_load=True)
 
-for blob in data_loader:                        
+#load test data gt
+gt_files = os.listdir(gt_path)
+gt_files.sort()
+
+for i, blob in enumerate(data_loader):                        
     im_data = blob['data']
     gt_data = blob['gt_density']
     density_map = net(im_data, gt_data)
     density_map = density_map.data.cpu().numpy()
-    gt_count = np.sum(gt_data)
+    data = scipy.io.loadmat(gt_path+gt_files[i])
+    gt_count = data['image_info'][0,0][0,0][-1][0,0]
+#     gt_count = np.sum(gt_data)
     et_count = np.sum(density_map)
+    print(i, gt_count, et_count)
     mae += abs(gt_count-et_count)
     mse += ((gt_count-et_count)*(gt_count-et_count))
     if vis:
         utils.display_results(im_data, gt_data, density_map)
     if save_output:
         utils.save_density_map(density_map, output_dir, 'output_' + blob['fname'].split('.')[0] + '.png')
+#     input("Press the Enter")
         
 mae = mae/data_loader.get_num_samples()
 mse = np.sqrt(mse/data_loader.get_num_samples())

@@ -40,6 +40,15 @@ train_gt_path = './data/formatted_trainval/shanghaitech_part_A_patches_9/train_d
 val_path = './data/formatted_trainval/shanghaitech_part_A_patches_9/val'
 val_gt_path = './data/formatted_trainval/shanghaitech_part_A_patches_9/val_den'
 
+
+train_whole_img_path = './data/formatted_trainval/shanghaitech_part_A_patches_9/train_whole_img'
+train_gt_whole_img_path = './data/formatted_trainval/shanghaitech_part_A_patches_9/train_den_whole_img'
+val_whole_img_path = './data/formatted_trainval/shanghaitech_part_A_patches_9/val_whole_img'
+val_gt_whole_img_path = './data/formatted_trainval/shanghaitech_part_A_patches_9/val_den_whole_img'
+
+
+model_path = './final_models/mcnn_shtechA_490.h5'
+
 #training configuration
 start_step = 0
 end_step = 2000
@@ -65,8 +74,11 @@ if rand_seed is not None:
 
 # load mcnn_net and amend_net
 mcnn_backbone = MCNN_BackBone()
+print('Loading the mcnn_backbone...')
+network.load_net(model_path, mcnn_backbone, prefix='DME.')
+print('Done')
 
-mcnn_net = MCNNNET(mcnn_backbone=mcnn_backbone)
+mcnn_net = MCNNNet(mcnn_backbone=mcnn_backbone)
 network.weights_normal_init(mcnn_net, dev=0.01)
 mcnn_net.cuda()
 mcnn_net.train()
@@ -113,7 +125,7 @@ for epoch in range(start_step, end_step+1):
         step = step + 1        
         im_data = blob['data']
         gt_data = blob['gt_density']
-        
+        step_cnt += 1
         
         for net in [mcnn_net, amend_net]:
             density_map = net(im_data, gt_data)
@@ -138,7 +150,7 @@ for epoch in range(start_step, end_step+1):
                 density_map = density_map.data.cpu().numpy()
                 et_count = np.sum(density_map)
                 utils.save_results(im_data,gt_data,density_map, output_dir)
-                net_text = 'mcnn ' if net is mcnn_net else 'amend '
+                net_text = 'mcnn  ' if net is mcnn_net else 'amend '
                 log_text = (net_text+'epoch: %4d, step %4d, Time: %.4fs, gt_cnt: %4.1f, et_cnt: %4.1f') \
                                    % (epoch, step, 1./fps, gt_count,et_count)
                 log_print(log_text, color='green', attrs=['bold'])
@@ -153,7 +165,7 @@ for epoch in range(start_step, end_step+1):
         save_name = os.path.join(output_dir, '{}_{}_{}.h5'.format(method,dataset_name,epoch))
         network.save_net(save_name, net)     
         #calculate error on the validation dataset 
-        mae,mse = evaluate_model(save_name, data_loader_val)
+        mae,mse = evaluate_model(save_name, data_loader_val, netname='AmendNet')
         if mae < best_mae:
             best_mae = mae
             best_mse = mse
