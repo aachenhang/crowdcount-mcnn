@@ -35,16 +35,11 @@ method = 'amendnet_saved_models'
 dataset_name = 'shtechA'
 output_dir = './amendnet_saved_models/'
 
-train_path = './data/formatted_trainval/shanghaitech_part_A_patches_9/train'
-train_gt_path = './data/formatted_trainval/shanghaitech_part_A_patches_9/train_den'
-val_path = './data/formatted_trainval/shanghaitech_part_A_patches_9/val'
-val_gt_path = './data/formatted_trainval/shanghaitech_part_A_patches_9/val_den'
+train_path = './data/formatted_trainval/AmendNet_shanghaitech_part_A_patches_9/train'
+train_gt_path = './data/formatted_trainval/AmendNet_shanghaitech_part_A_patches_9/train_den'
+val_path = './data/formatted_trainval/AmendNet_shanghaitech_part_A_patches_9/val'
+val_gt_path = './data/formatted_trainval/AmendNet_shanghaitech_part_A_patches_9/val_den'
 
-
-train_whole_img_path = './data/formatted_trainval/shanghaitech_part_A_patches_9/train_whole_img'
-train_gt_whole_img_path = './data/formatted_trainval/shanghaitech_part_A_patches_9/train_den_whole_img'
-val_whole_img_path = './data/formatted_trainval/shanghaitech_part_A_patches_9/val_whole_img'
-val_gt_whole_img_path = './data/formatted_trainval/shanghaitech_part_A_patches_9/val_den_whole_img'
 
 
 model_path = './final_models/mcnn_shtechA_490.h5'
@@ -74,9 +69,6 @@ if rand_seed is not None:
 
 # load mcnn_net and amend_net
 mcnn_backbone = MCNN_BackBone()
-print('Loading the mcnn_backbone...')
-network.load_net(model_path, mcnn_backbone, prefix='DME.')
-print('Done')
 
 mcnn_net = MCNNNet(mcnn_backbone=mcnn_backbone)
 network.weights_normal_init(mcnn_net, dev=0.01)
@@ -90,6 +82,9 @@ amend_net.cuda()
 amend_net.train()
 amend_net_optimizer = torch.optim.Adam(filter(lambda p: p.requires_grad, amend_net.parameters()), lr=lr)
 
+print('Loading the mcnn_backbone...')
+network.load_net(model_path, mcnn_backbone, prefix='DME.')
+print('Done')
 
 if not os.path.exists(output_dir):
     os.mkdir(output_dir)
@@ -149,7 +144,10 @@ for epoch in range(start_step, end_step+1):
                 gt_count = np.sum(gt_data)    
                 density_map = density_map.data.cpu().numpy()
                 et_count = np.sum(density_map)
-                utils.save_results(im_data,gt_data,density_map, output_dir)
+                if net is mcnn_net:
+                    utils.save_results(im_data,gt_data,density_map, output_dir, fname='mcnnresults.png')
+                elif net is amend_net:
+                    utils.save_results(im_data,gt_data,density_map, output_dir, fname='amendresults.png')
                 net_text = 'mcnn  ' if net is mcnn_net else 'amend '
                 log_text = (net_text+'epoch: %4d, step %4d, Time: %.4fs, gt_cnt: %4.1f, et_cnt: %4.1f') \
                                    % (epoch, step, 1./fps, gt_count,et_count)

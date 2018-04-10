@@ -84,7 +84,7 @@ class AmendNet(nn.Module):
         else:
             self.mcnn_backbone = MCNN_BackBone()
         self.conv3x3 = Conv2d( 1, 30, 3, same_padding=True, bn=bn)
-        self.downsample = nn.AvgPool2d(4)
+        self.downsample = nn.MaxPool2d(4)
         self.amend = nn.Sequential(Conv2d( 60, 50, 11, same_padding=True, bn=bn),
                                    Conv2d( 50, 40, 9, same_padding=True, bn=bn),
                                    Conv2d( 40, 30, 7, same_padding=True, bn=bn),
