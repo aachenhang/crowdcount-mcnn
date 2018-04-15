@@ -43,6 +43,7 @@ class MCNN(nn.Module):
         
         return x
 
+
     
 class MSCNN(nn.Module):
     '''
@@ -53,16 +54,17 @@ class MSCNN(nn.Module):
     def __init__(self, bn=False):
         super(MSCNN, self).__init__()
         self.network = nn.Sequential(Conv2d( 1, 64, 9, same_padding=True, bn=bn),
-                                    MSB_Conv(64, 4*16, [9,7,5,3]),
+                                    MSB_Conv(64, 4*16, 9,7,5,3, same_padding=True, bn=bn),
                                     nn.MaxPool2d(2),
-                                    MSB_Conv(64, 4*16, [9,7,5,3]),
-                                    MSB_Conv(64, 4*16, [9,7,5,3]),
+                                    MSB_Conv(64, 4*16, 9,7,5,3, same_padding=True, bn=bn),
+                                    MSB_Conv(64, 4*16, 9,7,5,3, same_padding=True, bn=bn),
                                     nn.MaxPool2d(2),
-                                    MSB_Conv(4*16, 3*32, [7,5,3]),
-                                    MSB_Conv(3*32, 3*32, [7,5,3]),
+                                    MSB_Conv(4*16, 3*32, 7,5,3, same_padding=True, bn=bn),
+                                    MSB_Conv(3*32, 3*32, 7,5,3, same_padding=True, bn=bn),
                                     Conv2d( 3*32, 1000, 1, same_padding=True, bn=bn),
                                     Conv2d( 1000, 1, 1, same_padding=True, bn=bn))
-        
+    
+    
     def forward(self, im_data):
         x = self.network(im_data)
         return x

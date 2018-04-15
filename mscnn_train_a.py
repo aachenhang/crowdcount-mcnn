@@ -5,7 +5,7 @@ import sys
 
 sys.path.append('./src/')
 
-from src.crowd_count import CrowdCounter
+from src.crowd_count import CrowdCounter_MSCNN
 from src import network
 from src.data_loader import ImageDataLoader
 from src.timer import Timer
@@ -31,7 +31,7 @@ def log_print(text, color=None, on_color=None, attrs=None):
 
 
 
-method = 'mcnn'
+method = 'mscnn'
 dataset_name = 'shtechA'
 output_dir = './saved_models_mscnn/'
 
@@ -134,7 +134,7 @@ for epoch in range(start_step, end_step+1):
         save_name = os.path.join(output_dir, '{}_{}_{}.h5'.format(method,dataset_name,epoch))
         network.save_net(save_name, net)     
         #calculate error on the validation dataset 
-        mae,mse = evaluate_model(save_name, data_loader_val)
+        mae,mse = evaluate_model(save_name, data_loader_val, "CrowdCounter_MSCNN")
         if mae < best_mae:
             best_mae = mae
             best_mse = mse

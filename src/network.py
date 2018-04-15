@@ -34,28 +34,40 @@ class FC(nn.Module):
 
     
 class MSB_Conv(nn.Module):
-    def __init__(self, in_channels, out_channels, kernel_size_list, stride=1, relu=True, same_padding=False, bn=False):
+    def __init__(self, in_channels, out_channels, kernel_size_1, kernel_size_2, kernel_size_3, kernel_size_4 = None, stride=1, relu=True, same_padding=False, bn=False):
         super(MSB_Conv, self).__init__()
-        self.in_channels = in_channels
-        self.out_channels = out_channels / len(kernel_size_list)
-        self.kernel_size_list = kernel_size_list
-        self.stride=stride
-        self.relu = relu
-        self.same_padding = same_padding
-        self.bn = bn
-    
+        if kernel_size_4 is not None:
+            out_channels = int(out_channels / 4)
+        else:
+            out_channels = int(out_channels / 3)
+        padding_1 = int((kernel_size_1 - 1) / 2) if same_padding else 0
+        self.conv1 = nn.Conv2d(in_channels, out_channels, kernel_size_1, stride, padding=padding_1)
+        padding_2 = int((kernel_size_2 - 1) / 2) if same_padding else 0
+        self.conv2 = nn.Conv2d(in_channels, out_channels, kernel_size_2, stride, padding=padding_2)
+        padding_3 = int((kernel_size_3 - 1) / 2) if same_padding else 0
+        self.conv3 = nn.Conv2d(in_channels, out_channels, kernel_size_3, stride, padding=padding_3)
+        if kernel_size_4 is not None:
+            padding_4 = int((kernel_size_4 - 1) / 2) if same_padding else 0
+            self.conv4 = nn.Conv2d(in_channels, out_channels, kernel_size_4, stride, padding=padding_4)
+        else:
+            self.conv4 = None
+        self.relu = nn.ReLU(inplace=True) if relu else None
     def forward(self, x):
-        concat_list = []
-        for kernel_size in self.kernel_size_list:
-            padding = int((kernel_size - 1) / 2) if same_padding else 0
-            conv = nn.Conv2d(in_channels, out_channels, kernel_size, stride, padding=padding)(x)
-            concat_list.append(conv)
-        x = torch.cat(concat_list,1)
-        if self.relu is True:
-            x = nn.ReLU(inplace=True)(x)
+        x1 = self.conv1(x)
+        x2 = self.conv2(x)
+        x3 = self.conv3(x)
+        if self.conv4 is None:
+            x = torch.cat((x1, x2, x3),1)
+        else:
+            x4 = self.conv4(x)
+            x = torch.cat((x1, x2, x3, x4),1)
+        
+        if self.relu is not None:
+            x = self.relu(x)
         return x
     
-
+    
+    
 def save_net(fname, net):
     import h5py
     h5f = h5py.File(fname, mode='w')

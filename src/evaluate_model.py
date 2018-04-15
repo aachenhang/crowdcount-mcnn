@@ -1,4 +1,4 @@
-from crowd_count import CrowdCounter
+from crowd_count import CrowdCounter, CrowdCounter_MSCNN
 from AmendNet import MCNNNet, AmendNet
 import network
 import numpy as np
@@ -11,8 +11,10 @@ def evaluate_model(trained_model, data_loader, netname='CrowdCounter'):
         net = MCNNNet()
     elif(netname is 'AmendNet'):
         net = AmendNet()
+    elif(netname is 'CrowdCounter_MSCNN'):
+        net = CrowdCounter_MSCNN()
     else:
-        raise('netname should be one of ["CrowdCounter", "MCNNNet", "AmendNet"],\
+        raise('netname should be one of ["CrowdCounter", "MCNNNet", "AmendNet", "CrowdCounter_MSCNN"],\
         but we got ', netname)
     network.load_net(trained_model, net)
     net.cuda()
