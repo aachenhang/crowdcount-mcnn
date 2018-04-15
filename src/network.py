@@ -32,6 +32,27 @@ class FC(nn.Module):
             x = self.relu(x)
         return x
 
+    
+class MSB_Conv(nn.Module):
+    def __init__(self, in_channels, out_channels, kernel_size_list, stride=1, relu=True, same_padding=False, bn=False):
+        super(MSB_Conv, self).__init__()
+        self.in_channels = in_channels
+        self.out_channels = out_channels
+        self.kernel_size_list = kernel_size_list
+        self.stride=stride
+        self.relu = relu
+        self.same_padding = same_padding
+        self.bn = bn
+    
+    def forward(self, x):
+        concat_list = []
+        for kernel_size in self.kernel_size_list:
+            padding = int((kernel_size - 1) / 2) if same_padding else 0
+            conv = nn.Conv2d(in_channels, out_channels, kernel_size, stride, padding=padding)(x)
+            concat_list.append(conv)
+        x = torch.cat(concat_list,1)
+        return x
+    
 
 def save_net(fname, net):
     import h5py
