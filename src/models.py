@@ -1,6 +1,6 @@
 import torch
 import torch.nn as nn
-from network import Conv2d
+from network import Conv2d, MSB_Conv
 
 class MCNN(nn.Module):
     '''
@@ -42,7 +42,30 @@ class MCNN(nn.Module):
         x = self.fuse(x)
         
         return x
+
     
+class MSCNN(nn.Module):
+    '''
+    Multi-Scale CNN 
+        -Implementation of Multi-Scale Convolutional Neural networks for crowd counting (Lingke Zeng et al.)
+    '''
+    
+    def __init__(self, bn=False):
+        super(MSCNN, self).__init__()
+        self.network = nn.Sequential(Conv2d( 1, 64, 9, same_padding=True, bn=bn),
+                                    MSB_Conv(64, 4*16, [9,7,5,3]),
+                                    nn.MaxPool2d(2),
+                                    MSB_Conv(64, 4*16, [9,7,5,3]),
+                                    MSB_Conv(64, 4*16, [9,7,5,3]),
+                                    nn.MaxPool2d(2),
+                                    MSB_Conv(4*16, 3*32, [7,5,3]),
+                                    MSB_Conv(3*32, 3*32, [7,5,3]),
+                                    Conv2d( 3*32, 1000, 1, same_padding=True, bn=bn),
+                                    Conv2d( 1000, 1, 1, same_padding=True, bn=bn))
+        
+    def forward(self, im_data):
+        x = self.network(im_data)
+        return x
     
 
     

@@ -37,7 +37,7 @@ class MSB_Conv(nn.Module):
     def __init__(self, in_channels, out_channels, kernel_size_list, stride=1, relu=True, same_padding=False, bn=False):
         super(MSB_Conv, self).__init__()
         self.in_channels = in_channels
-        self.out_channels = out_channels
+        self.out_channels = out_channels / len(kernel_size_list)
         self.kernel_size_list = kernel_size_list
         self.stride=stride
         self.relu = relu
@@ -51,6 +51,8 @@ class MSB_Conv(nn.Module):
             conv = nn.Conv2d(in_channels, out_channels, kernel_size, stride, padding=padding)(x)
             concat_list.append(conv)
         x = torch.cat(concat_list,1)
+        if self.relu is True:
+            x = nn.ReLU(inplace=True)(x)
         return x
     
 
